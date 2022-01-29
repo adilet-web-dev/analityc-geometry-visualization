@@ -21,9 +21,10 @@
         <script src="https://preview.babylonjs.com/inspector/babylon.inspector.bundle.js"></script>
         
         <script src="faux.js"></script>
+        <script src="main.js"></script>
 
         <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-1BmE4kWBq78iYhFldvKuhfTAU6auU8tT94WrHftjDbrCEXSU1oBoqyl2QvZ6jIW3" crossorigin="anonymous">
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-ka7Sk0Gln4gmtz2MlQnikT1wXgYsOg+OMhuP+IlRH9sENBO0LRn5q+8nbTov4+1p" crossorigin="anonymous"></script>
+        <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-ka7Sk0Gln4gmtz2MlQnikT1wXgYsOg+OMhuP+IlRH9sENBO0LRn5q+8nbTov4+1p" crossorigin="anonymous"></script>
 
         <style>
             html, body {
@@ -91,33 +92,21 @@
 
         // Do not touch! =======
 
-        var startRenderLoop = function (engine, canvas) {
-            engine.runRenderLoop(function () {
-                if (sceneToRender && sceneToRender.activeCamera) {
-                    sceneToRender.render();
-                }
-            });
-        }
 
-        var engine = null;
-        var scene = null;
-        var sceneToRender = null;
 
-        var createDefaultEngine = function() { 
-            return new BABYLON.Engine(
-                canvas, 
-                true, 
-                { 
-                    preserveDrawingBuffer: true, 
-                    stencil: true,  
-                    disableWebGL2Support: false
-                }
-            ); 
-        };
+        var engine = new BABYLON.Engine(
+            canvas, 
+            true, 
+            { 
+                preserveDrawingBuffer: true, 
+                stencil: true,  
+                disableWebGL2Support: false
+            }
+        );
+    
+        var scene = new BABYLON.Scene(engine);
+        var sceneToRender = scene;
 
-        // =========
-
-        scene = new BABYLON.Scene(engine);
         var scale   = 0.1, MeshWriter;
 
         const camera = new BABYLON.ArcRotateCamera(
@@ -135,8 +124,9 @@
             fauxLoad()
         }
 
-        let center = BABYLON.Vector3.Zero();
         let length = 5;
+
+        let center = BABYLON.Vector3.Zero();
         let linesGrayColor = [new BABYLON.Color4(0.39, 0.39, 0.39), new BABYLON.Color4(0.39, 0.39, 0.39)]
 
         const basis = [
@@ -188,22 +178,19 @@
             height: 8
         })
 
-        window.initFunction = async function() {
-                    
-                    
-            var asyncEngineCreation = async function() {
-                try {
-                    return createDefaultEngine();
-                } catch(e) {
-                    console.log("the available createEngine function failed. Creating the default engine instead");
-                    return createDefaultEngine();
+        var startRenderLoop = function (engine, canvas) {
+            engine.runRenderLoop(function () {
+                if (sceneToRender && sceneToRender.activeCamera) {
+                    sceneToRender.render();
                 }
-            }
+            });
+        }
 
-            window.engine = await asyncEngineCreation();
+        window.initFunction = async function() {
             if (!engine) throw 'engine should not be null.';
             startRenderLoop(engine, canvas);
         };
+        
         initFunction().then(() => {
             sceneToRender = scene                    
         });
