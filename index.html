@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+
+        <title>Babylon.js sample code</title>
+
+        <!-- Babylon.js -->
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/dat-gui/0.6.2/dat.gui.min.js"></script>
+        <script src="https://preview.babylonjs.com/ammo.js"></script>
+        <script src="https://preview.babylonjs.com/cannon.js"></script>
+        <script src="https://preview.babylonjs.com/Oimo.js"></script>
+        <script src="https://preview.babylonjs.com/earcut.min.js"></script>
+        <script src="https://preview.babylonjs.com/babylon.js"></script>
+        <script src="https://preview.babylonjs.com/materialsLibrary/babylonjs.materials.min.js"></script>
+        <script src="https://preview.babylonjs.com/proceduralTexturesLibrary/babylonjs.proceduralTextures.min.js"></script>
+        <script src="https://preview.babylonjs.com/postProcessesLibrary/babylonjs.postProcess.min.js"></script>
+        <script src="https://preview.babylonjs.com/loaders/babylonjs.loaders.js"></script>
+        <script src="https://preview.babylonjs.com/serializers/babylonjs.serializers.min.js"></script>
+        <script src="https://preview.babylonjs.com/gui/babylon.gui.min.js"></script>
+        <script src="https://preview.babylonjs.com/inspector/babylon.inspector.bundle.js"></script>
+        
+        <script src="faux.js"></script>
+
+        <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-1BmE4kWBq78iYhFldvKuhfTAU6auU8tT94WrHftjDbrCEXSU1oBoqyl2QvZ6jIW3" crossorigin="anonymous">
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-ka7Sk0Gln4gmtz2MlQnikT1wXgYsOg+OMhuP+IlRH9sENBO0LRn5q+8nbTov4+1p" crossorigin="anonymous"></script>
+
+        <style>
+            html, body {
+                overflow: hidden;
+                margin: 0;
+                padding: 0;
+            }
+
+            #renderCanvas {
+                width: 100%;
+                height: 100%;
+                touch-action: none;
+            }
+        </style>
+    </head>
+<body>
+
+    <div class="row">
+        <div class="col-3">
+            <h4>Из точки и вектора</h4>
+            <b>точка</b>
+            <div class="row">
+                <div class="col-4">
+                    <input type="number" placeholder="x" class="form-control col-4">
+                </div>
+                <div class="col-4">
+                    <input type="number" placeholder="y" class="form-control col-4">
+                </div>
+                <div class="col-4">
+                    <input type="number" placeholder="z" class="form-control col-4">  
+                </div>        
+            </div>
+            <hr>
+            <h4>Из формулы плоскости
+
+            </h4>
+            <i>A * x + B * y + C * z + D = 0</i>
+            <div class="row">
+
+                <div class="col-3">
+                    <input type="number" placeholder="A" class="form-control col-4">
+                </div>
+                <div class="col-3">
+                    <input type="number" placeholder="B" class="form-control col-4">
+                </div>
+                <div class="col-3">
+                    <input type="number" placeholder="C" class="form-control col-4">  
+                </div>
+                <div class="col-3">
+                    <input type="number" placeholder="D" class="form-control col-4">  
+                </div>
+            </div>
+
+        </div>
+        <div class="col-9">
+            <canvas id="renderCanvas"></canvas>
+        </div>
+        
+    </div>
+    
+    
+    <script>
+
+        var canvas = document.getElementById("renderCanvas");
+
+        // Do not touch! =======
+
+        var startRenderLoop = function (engine, canvas) {
+            engine.runRenderLoop(function () {
+                if (sceneToRender && sceneToRender.activeCamera) {
+                    sceneToRender.render();
+                }
+            });
+        }
+
+        var engine = null;
+        var scene = null;
+        var sceneToRender = null;
+
+        var createDefaultEngine = function() { 
+            return new BABYLON.Engine(
+                canvas, 
+                true, 
+                { 
+                    preserveDrawingBuffer: true, 
+                    stencil: true,  
+                    disableWebGL2Support: false
+                }
+            ); 
+        };
+
+        // =========
+
+        scene = new BABYLON.Scene(engine);
+        var scale   = 0.1, MeshWriter;
+
+        const camera = new BABYLON.ArcRotateCamera(
+            "Camera", 
+            -Math.PI / 2, 
+            Math.PI / 2, 
+            12, 
+            BABYLON.Vector3.Zero()
+            );
+
+        camera.attachControl(canvas, true);
+        const light = new BABYLON.HemisphericLight("light", new BABYLON.Vector3(1, 1, 0));
+
+        if ( typeof TYPE === "undefined" ) {
+            fauxLoad()
+        }
+
+        let center = BABYLON.Vector3.Zero();
+        let length = 5;
+        let linesGrayColor = [new BABYLON.Color4(0.39, 0.39, 0.39), new BABYLON.Color4(0.39, 0.39, 0.39)]
+
+        const basis = [
+            [center, new BABYLON.Vector3(length, 0, 0)],
+            [center, new BABYLON.Vector3(0, length, 0)],
+            [center, new BABYLON.Vector3(0, 0, length)],
+        ]
+
+        const minusBasis = [
+            [center, new BABYLON.Vector3(-length, 0, 0)],
+            [center, new BABYLON.Vector3(0, -length, 0)],
+            [center, new BABYLON.Vector3(0, 0, -length)],
+        ]
+
+        for (let i = 0; i < 3; i++){
+            BABYLON.MeshBuilder.CreateLines("lines", {points: basis[i]});
+            BABYLON.MeshBuilder.CreateLines("lines", {points: minusBasis[i], colors: linesGrayColor});
+
+        }
+
+        Writer = BABYLON.MeshWriter(scene, {scale:scale,defaultFont:"Arial"});
+        xAxisText  = new Writer("x", {
+            "letter-height": 5,
+            "letter-thickness": 0.2,
+            "position": {"x": length * 10}
+        });
+
+        yAxisText  = new Writer("y", {
+            "letter-height": 3,
+            "letter-thickness": 0.2,
+            "position": {"y": length * 10}
+        });
+
+        zAxisText  = new Writer("z", {
+            "letter-height": 5,
+            "letter-thickness": 0.2,
+            "position": {"z": length * 10}
+        });
+
+        let abstractPlane = BABYLON.Plane.FromPositionAndNormal(
+            new BABYLON.Vector3(0, 0, 0),
+            new BABYLON.Vector3(1, 2, 5)
+        )
+
+        let plane = BABYLON.MeshBuilder.CreatePlane("plane", {
+            sourcePlane: abstractPlane,
+            sideOrientation: BABYLON.Mesh.DOUBLESIDE,
+            width: 8,
+            height: 8
+        })
+
+        window.initFunction = async function() {
+                    
+                    
+            var asyncEngineCreation = async function() {
+                try {
+                    return createDefaultEngine();
+                } catch(e) {
+                    console.log("the available createEngine function failed. Creating the default engine instead");
+                    return createDefaultEngine();
+                }
+            }
+
+            window.engine = await asyncEngineCreation();
+            if (!engine) throw 'engine should not be null.';
+            startRenderLoop(engine, canvas);
+        };
+        initFunction().then(() => {
+            sceneToRender = scene                    
+        });
+
+        // Resize
+        window.addEventListener("resize", function () {
+            engine.resize();
+        });
+        
+    </script>
+</body>
+</html>
