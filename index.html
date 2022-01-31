@@ -19,6 +19,9 @@
         <script src="https://preview.babylonjs.com/serializers/babylonjs.serializers.min.js"></script>
         <script src="https://preview.babylonjs.com/gui/babylon.gui.min.js"></script>
         <script src="https://preview.babylonjs.com/inspector/babylon.inspector.bundle.js"></script>
+
+        <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+        <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
         
         <script src="faux.js"></script>
         <script src="main.js"></script>
@@ -46,21 +49,22 @@
             <div class="col-3 mt-3" id="app">
 
                 <h3>Плоскость</h3>
-                <h5>Из формулы плоскости</h4>
-
+                Из формулы плоскости
+                <br>
                 <i>A * x + B * y + C * z + D = 0</i>
+                <br>
                 <div class="row">
                     <div class="col-3">
-                        <input type="number" placeholder="A" class="form-control col-4" v-model="Ahook">
+                        <input type="number" placeholder="A" class="form-control" v-model="Ahook">
                     </div>
                     <div class="col-3">
-                        <input type="number" placeholder="B" class="form-control col-4" v-model="Bhook">
+                        <input type="number" placeholder="B" class="form-control" v-model="Bhook">
                     </div>
                     <div class="col-3">
-                        <input type="number" placeholder="C" class="form-control col-4" v-model="Chook">
+                        <input type="number" placeholder="C" class="form-control" v-model="Chook">
                       </div>
                     <div class="col-3">
-                        <input type="number" placeholder="D" class="form-control col-4" v-model="Dhook">
+                        <input type="number" placeholder="D" class="form-control" v-model="Dhook">
                       </div>
                 </div>
 
@@ -73,17 +77,51 @@
                 >
                 <label for="changeVisibility">Спрятать плоскость?</label>
 
-                <hr><br>
+                <hr>
+                <h3>Прямая</h3>
 
-                Прямая
-
+                 из канонического уравнения $${x - x_0 \over \overrightarrow{p_x}} = {y - y_0 \over \overrightarrow{p_y}} = {z - z_0 \over \overrightarrow{p_z}}.$$
+                <p>координаты x0, y0, z0</p>
+                <div class="row">
+                    <div class="col-4">
+                        <input type="number" placeholder="x0" class="form-control" v-model="x0hook">
+                    </div>
+                    <div class="col-4">
+                        <input type="number" placeholder="y0" class="form-control" v-model="y0hook">
+                    </div>
+                    <div class="col-4">
+                        <input type="number" placeholder="z0" class="form-control" v-model="z0hook">
+                    </div>
+                </div>
+                <p>координаты x, y, z вектора</p>
+                <div class="row">
+                    <div class="col-4">
+                        <input type="number" placeholder="x" class="form-control" v-model="xhook">
+                    </div>
+                    <div class="col-4">
+                        <input type="number" placeholder="y" class="form-control" v-model="yhook">
+                    </div>
+                    <div class="col-4">
+                        <input type="number" placeholder="z" class="form-control" v-model="zhook">
+                    </div>
+                </div>
+                <input 
+                type="checkbox" 
+                name="changeVisibily" 
+                v-model="lineVisibilityHook" 
+                id="changeVisibily"
+                class="ml-3"
+                >
+                <label for="changeVisibility">Спрятать прямую?</label>
+                <br>
                 
+
                 
 
 
             </div>
             <div class="col-9">
-                <canvas id="renderCanvas"></canvas>
+                <canvas id="renderCanvas" ></canvas>
             </div>
             
         </div>
@@ -94,6 +132,8 @@
     <script>
 
         var canvas = document.getElementById("renderCanvas");
+        canvas.width = 300;
+        canvas.height = 200;
 
         // Do not touch! ===================
 
@@ -191,16 +231,36 @@
             width: 8,
             height: 8
         });
+
+        
+        let t = 100;
+        const myPoints = [
+            new BABYLON.Vector3(t + 1, t + 1, t + 1),
+            new BABYLON.Vector3(-t + 1, -t + 1, -t + 1)
+        ];
+
+        const options = {
+            points: myPoints,
+            updatable: true
+        };
+
+        
+        let lines = BABYLON.MeshBuilder.CreateLines("lines", options);
+
+        options.instance = lines;
+
+        lines = BABYLON.MeshBuilder.CreateLines("lines", options);
+
         // Vue
 
         let app = new Vue({
             el: "#app",
             data: {
-                A: 1,
-                B: 1,
-                C: 1,
-                D: 1,
-                planeVisibility: true
+                A: 1, B: 1, C: 1, D: 1,
+                planeVisibility: true,
+
+                x0: 1, y0: 1, z0: 1, x: 1, y: 1, z: 1,
+                lineVisibility: true,
             },
             computed: {
                 Ahook: {
@@ -225,6 +285,20 @@
                         this.planeVisibility = newValue;
                         plane.setEnabled(this.planeVisibility);
                     }
+                }, 
+                x0hook: {get: function() {return this.x0}, set: function(newValue) {this.x0 = parseInt(newValue); this.changeLine();}},
+                y0hook: {get: function() {return this.y0}, set: function(newValue) {this.y0 = parseInt(newValue); this.changeLine();}},
+                z0hook: {get: function() {return this.z0}, set: function(newValue) {this.z0 = parseInt(newValue); this.changeLine();}},
+                xhook: {get: function() {return this.x}, set: function(newValue) {this.x = parseInt(newValue); this.changeLine();}},
+                yhook: {get: function() {return this.y}, set: function(newValue) {this.y = parseInt(newValue); this.changeLine();}},
+                zhook: {get: function() {return this.z}, set: function(newValue) {this.z = parseInt(newValue); this.changeLine();}},
+
+                lineVisibilityHook: {
+                    get: function() {return this.lineVisibility},
+                    set: function(newValue){
+                        this.lineVisibility = newValue;
+                        lines.setEnabled(this.lineVisibility);
+                    }
                 }
             },
             methods: {
@@ -241,6 +315,22 @@
                     plane.position = newPosition;
 
                     currentNormal = newNormal;
+                },
+                changeLine: function(){
+                    console.log(typeof this.x0);
+                    newLinePoints = [
+                        new BABYLON.Vector3(this.x0 + t * this.x, this.y0 + t * this.y, this.z0 + t * this.z),
+                        new BABYLON.Vector3(this.x0 - t * this.x, this.y0 - t * this.y, this.z0 - t * this.z)
+                    ];
+
+
+                    options.points = [];
+                    options.points = newLinePoints;
+                    options.instance = lines;
+                    console.table(options.points);
+                    lines = null;
+
+                    lines = BABYLON.MeshBuilder.CreateLines("lines", options);
                 }
             }
         });        
